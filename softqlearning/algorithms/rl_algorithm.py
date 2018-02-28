@@ -28,6 +28,7 @@ class RLAlgorithm(Algorithm):
             max_path_length=1000,
             eval_n_episodes=10,
             eval_render=False,
+            iter_callback=None
     ):
         """
         Args:
@@ -45,6 +46,7 @@ class RLAlgorithm(Algorithm):
             eval_n_episodes (`int`): Number of rollouts to evaluate.
             eval_render (`int`): Whether or not to render the evaluation
                 environment.
+            iter_callback (`Function(locals, globals)`): Callback function called before every epoch.
         """
         self._batch_size = batch_size
         self._n_epochs = n_epochs
@@ -61,6 +63,8 @@ class RLAlgorithm(Algorithm):
         self.env = None
         self.policy = None
         self.pool = None
+
+        self.iter_callback = iter_callback
 
     def _train(self, env, policy, pool):
         """Perform RL training.
@@ -89,6 +93,9 @@ class RLAlgorithm(Algorithm):
             for epoch in gt.timed_for(
                     range(self._n_epochs + 1), save_itrs=True):
                 logger.push_prefix('Epoch #%d | ' % epoch)
+
+                if self.iter_callback is not None:
+                    self.iter_callback(locals(), globals())
 
                 for t in range(self._epoch_length):
                     iteration = t + epoch * self._epoch_length
